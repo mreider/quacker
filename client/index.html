@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User 1 Token Input</title>
+</head>
+<body>
+    <h1>Enter Your Token</h1>
+    <input type="text" id="tokenInput" placeholder="Enter token here">
+    <button id="submitToken">Submit</button>
+    <div id="output"></div>
+
+    <script>
+        const { ipcRenderer } = require('electron');
+
+        document.getElementById('submitToken').addEventListener('click', async () => {
+            const token = document.getElementById('tokenInput').value;
+            if (!token) {
+                document.getElementById('output').innerText = 'Token is required';
+                return;
+            }
+
+            const result = await ipcRenderer.invoke('validate-token', token);
+            if (result.error) {
+                document.getElementById('output').innerText = `Error: ${result.error}`;
+            } else {
+                const urls = result.urls.join('\n');
+                document.getElementById('output').innerText = `Presigned URLs:\n${urls}`;
+            }
+        });
+    </script>
+</body>
+</html>

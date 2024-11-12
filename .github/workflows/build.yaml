@@ -1,0 +1,82 @@
+name: Build Electron Apps
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number for the build'
+        required: true
+        default: '1.0.0'
+
+jobs:
+  build-client:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        arch: [x64, arm64]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install dependencies for Client
+        run: |
+          cd client
+          npm install
+
+      - name: Set version number for Client
+        run: |
+          cd client
+          npm version ${{ github.event.inputs.version }}
+
+      - name: Package Client Electron App
+        run: |
+          cd client
+          npx electron-packager . client-electron-app --platform=${{ matrix.os == 'windows-latest' && 'win32' || (matrix.os == 'ubuntu-latest' && 'linux' || 'darwin') }} --arch=${{ matrix.arch }} --out=out --overwrite
+
+      - name: Upload Client Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: client-electron-app-${{ matrix.os }}-${{ matrix.arch }}-${{ github.event.inputs.version }}
+          path: client/out/*
+
+  build-generator:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        arch: [x64, arm64]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install dependencies for Generator
+        run: |
+          cd generator
+          npm install
+
+      - name: Set version number for Generator
+        run: |
+          cd generator
+          npm version ${{ github.event.inputs.version }}
+
+      - name: Package Generator Electron App
+        run: |
+          cd generator
+          npx electron-packager . generator-electron-app --platform=${{ matrix.os == 'windows-latest' && 'win32' || (matrix.os == 'ubuntu-latest' && 'linux' || 'darwin') }} --arch=${{ matrix.arch }} --out=out --overwrite
+
+      - name: Upload Generator Artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: generator-electron-app-${{ matrix.os }}-${{ matrix.arch }}-${{ github.event.inputs.version }}
+          path: generator/out/*
