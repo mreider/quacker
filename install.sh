@@ -18,24 +18,26 @@ read TOKEN_SECRET
 sudo apt update && sudo apt upgrade -y
 sudo apt install -y python3 python3-pip python3-venv nginx software-properties-common certbot python3-certbot-nginx git
 
-# Create a new user named quacker and set up the backend directory
+# Create a new user named quacker
 sudo useradd -m -s /bin/bash quacker || true
-sudo -u quacker mkdir -p /home/quacker/backend
 
-# Clone the GitHub repository into the backend directory as quacker user
-sudo -u quacker git clone https://github.com/mreider/quacker.git /home/quacker/backend
+# Clone the GitHub repository into the quacker home directory
+sudo -u quacker git clone https://github.com/mreider/quacker.git /home/quacker
 
-# Set up a virtual environment in the backend directory and install dependencies
-sudo -u quacker python3 -m venv /home/quacker/backend/venv
-sudo -u quacker /home/quacker/backend/venv/bin/pip install -r /home/quacker/backend/requirements.txt
+# Set up a virtual environment in the quacker home directory and install dependencies
+sudo -u quacker python3 -m venv /home/quacker/venv
+sudo -u quacker /home/quacker/venv/bin/pip install -r /home/quacker/requirements.txt
 
 # Create environment file
-sudo tee /home/quacker/backend/.env > /dev/null <<EOT
+sudo tee /home/quacker/.env > /dev/null <<EOT
 AWS_URL=$AWS_URL
 AWS_KEY=$AWS_KEY
 AWS_SECRET=$AWS_SECRET
 TOKEN_SECRET=$TOKEN_SECRET
 EOT
+
+# Create log directory in quacker's home
+sudo -u quacker mkdir -p /home/quacker/logs
 
 # Create systemd service file for Gunicorn with venv
 sudo tee /etc/systemd/system/backend.service > /dev/null <<EOT
@@ -46,19 +48,15 @@ After=network.target
 [Service]
 User=quacker
 Group=www-data
-WorkingDirectory=/home/quacker/backend
-EnvironmentFile=/home/quacker/backend/.env
-ExecStart=/home/quacker/backend/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 app:app
-StandardOutput=append:/var/log/gunicorn/gunicorn.out.log
-StandardError=append:/var/log/gunicorn/gunicorn.err.log
+WorkingDirectory=/home/quacker
+EnvironmentFile=/home/quacker/.env
+ExecStart=/home/quacker/venv/bin/gunicorn --workers 3 --bind 0.0.0.0:8000 app:app
+StandardOutput=append:/home/quacker/logs/gunicorn.out.log
+StandardError=append:/home/quacker/logs/gunicorn.err.log
 
 [Install]
 WantedBy=multi-user.target
 EOT
-
-# Create log directory for Gunicorn
-sudo mkdir -p /var/log/gunicorn
-sudo chown quacker:www-data /var/log/gunicorn
 
 # Start and enable the backend service
 sudo systemctl daemon-reload
