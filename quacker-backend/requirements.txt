@@ -1,0 +1,6 @@
+Flask==2.0.1
+boto3==1.18.69
+gunicorn==20.1.0
+python-dotenv==0.19.2 
+cryptography==3.4.7  
+requests==2.26.0   
