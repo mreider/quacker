@@ -4,6 +4,25 @@ echo "Starting Quacker backend setup..."
 
 # Ask for user input
 read -p "Enter domain name: " DOMAIN
+
+
+# Get the public IP of the server
+SERVER_IP=$(curl -s http://checkip.amazonaws.com)
+
+# Get the IP that the domain resolves to
+DOMAIN_IP=$(dig +short "$DOMAIN" | tail -n1)
+
+# Check if the domain's IP matches the server's IP
+if [ "$SERVER_IP" != "$DOMAIN_IP" ]; then
+  echo "Error: The DNS for $DOMAIN does not point to this server's IP ($SERVER_IP)."
+  echo "Please update your DNS settings and try again."
+  exit 1
+else
+  echo "DNS is correctly pointing to this server. Proceeding with installation..."
+fi
+
+
+
 read -p "Enter email for SSL certificate: " EMAIL
 read -p "Enter AWS URL: " AWS_URL
 read -p "Enter AWS Access Key: " AWS_KEY
