@@ -2,6 +2,10 @@
 
 echo "Starting Quacker backend setup..."
 
+if [ ! -t 0 ]; then
+  exec < /dev/tty
+fi
+
 # Ask for user input
 read -p "Enter domain name: " DOMAIN
 
