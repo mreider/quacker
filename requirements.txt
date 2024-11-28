@@ -1,0 +1,17 @@
+flask
+flask-sqlalchemy
+flask-migrate
+flask-wtf
+flask-cors
+cryptography
+requests
+apscheduler
+gunicorn
+beautifulsoup4
+email-validator
+python-dotenv
+lxml
+flask-cors
+python-dateutil
+pytz
+fasteners

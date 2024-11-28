@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}HTML Form Code{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-3">HTML Form Code</h1>
+    <p>Copy the following code and embed it into your blog to enable subscriptions:</p>
+    <textarea id="form-code" class="form-control" rows="{{ form_code.count('\n') + 2 }}" readonly>{{ form_code }}</textarea>
+    <button id="copy-button" class="btn btn-primary mt-3">Copy to Clipboard</button>
+    <a href="{{ url_for('index') }}" class="btn btn-secondary mt-3">Back to Dashboard</a>
+</div>
+
+<style>
+    /* Reduce the font size of the textarea */
+    #form-code {
+        font-size: 12px; /* Smaller text for easier copying/pasting */
+        line-height: 1.4; /* Adjusted line spacing for better readability */
+        font-family: monospace; /* Monospace font for code appearance */
+    }
+</style>
+
+<script>
+    const copyButton = document.getElementById('copy-button');
+    const formCode = document.getElementById('form-code');
+
+    copyButton.addEventListener('click', () => {
+        formCode.select();
+        formCode.setSelectionRange(0, 99999); // For mobile devices
+        navigator.clipboard.writeText(formCode.value)
+            .then(() => {
+                copyButton.textContent = 'Copied!';
+                setTimeout(() => { copyButton.textContent = 'Copy to Clipboard'; }, 2000);
+            })
+            .catch(err => console.error('Error copying text:', err));
+    });
+</script>
+{% endblock %}

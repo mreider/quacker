@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Quacker{% endblock %}
+
+{% block content %}
+<div class="content-container">
+    <!-- Optional Warning Note -->
+    {% if show_warning_note %}
+    <div class="warning-note">
+        This service is for testing purposes. While it should work, and I use it personally, there is no guarantee it will continue running forever. For invite codes, <a href="https://github.com/mreider/quacker/wiki" target="_blank">read the wiki</a>.
+    </div>
+    {% endif %}
+
+    <!-- Add a Blog with Invite Code -->
+    <form method="POST" action="{{ require_invite_codes and url_for('enable_with_code') or url_for('enable_newsletters') }}" class="invite-form mb-4">
+        {% if require_invite_codes %}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="input-group">
+            <input type="text" name="invite_code" class="form-control form-control-sm" placeholder="Invite Code" required>
+            <button type="submit" class="btn btn-primary btn-sm">Add a Blog</button>
+        </div>
+        {% else %}
+        <button type="submit" class="btn btn-primary btn-sm w-100">Add a Blog</button>
+        {% endif %}
+    </form>
+
+    <!-- Blogs Table -->
+    <div class="table-responsive">
+        <table class="table table-striped table-sm">
+            <thead>
+                <tr>
+                    <th>Blog URL</th>
+                    <th>Subscribers</th>
+                    <th>Donation</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for blog in blogs %}
+                <tr>
+                    <td>
+                        <a href="{{ blog.blog_url }}" target="_blank" rel="noopener noreferrer">
+                            {{ blog.blog_url | replace("http://", "") | replace("https://", "") }}
+                        </a>
+                    </td>
+                    <td class="text-center">{{ blog.subscribers }}</td>
+                    <td class="text-center">{{ blog.donated }}</td>
+                    <td class="text-center">
+                        <div class="action-buttons">
+                            <button type="button" class="btn btn-dark btn-sm me-2" onclick="openDisableOverlay('{{ blog.id }}', '{{ blog.blog_url }}')">Disable</button>
+                            <a href="{{ url_for('show_html_code', blog_id=blog.id) }}" class="btn btn-dark btn-sm">Show HTML Code</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Disable Blog Overlay -->
+<div id="disableOverlay" class="overlay" style="display: none;">
+    <div class="overlay-content">
+        <button class="close-btn" onclick="closeDisableOverlay()">×</button>
+        <h3>Disable Blog</h3>
+        <p>Enter your email to confirm disabling:</p>
+        <form id="disableForm" method="POST" action="{{ url_for('disable_newsletters') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="blog_id" id="disableBlogId" value="">
+            <div class="form-group">
+                <label for="disableEmail">Email:</label>
+                <input type="email" name="email" id="disableEmail" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-dark mt-2">Send Confirmation Email</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openDisableOverlay(blogId, blogUrl) {
+        const overlay = document.getElementById('disableOverlay');
+        const blogIdInput = document.getElementById('disableBlogId');
+    
+        if (!overlay || !blogIdInput) {
+            console.error('Overlay or blog ID input not found.');
+            return;
+        }
+    
+        // Show the overlay
+        overlay.style.display = 'flex';
+        blogIdInput.value = blogId;
+    
+        // Disable scrolling on the main page
+        document.body.classList.add('overlay-active');
+    }
+    
+    function closeDisableOverlay() {
+        const overlay = document.getElementById('disableOverlay');
+        if (!overlay) {
+            console.error('Overlay not found.');
+            return;
+        }
+    
+        // Hide the overlay
+        overlay.style.display = 'none';
+    
+        // Enable scrolling on the main page
+        document.body.classList.remove('overlay-active');
+    }
+    </script>    
+{% endblock %}

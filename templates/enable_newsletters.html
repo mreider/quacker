@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}Enable Newsletters{% endblock %}
+
+{% block content %}
+<h2 class="mt-4">Enable Newsletters</h2>
+<form method="POST" action="{{ url_for('enable_newsletters') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <div class="mb-3">
+        <label for="newsletter_email" class="form-label">Your preferred "From:" email address for newsletters?</label>
+        <input type="email" name="newsletter_email" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="mailgun_api_key" class="form-label">Mailgun API Key (don't worry - fully encrypted in the db)</label>
+        <input type="text" name="mailgun_api_key" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="mailgun_domain" class="form-label">Your Mailgun Domain (e.g., sandbox123.mailgun.org)</label>
+        <input type="text" name="mailgun_domain" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="rss_feed" class="form-label">Your blog's RSS Feed URL (must work to continue)</label>
+        <input type="url" name="rss_feed" class="form-control" required>
+    </div>
+    <div class="mb-3">
+        <label for="home_url" class="form-label">Home Page URL (must match the RSS feed's domain)</label>
+        <input type="url" name="home_url" class="form-control" required>
+    </div>
+    <button type="submit" class="btn btn-success">Enable Newsletters</button>
+</form>
+{% endblock %}
