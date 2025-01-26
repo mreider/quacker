@@ -31,6 +31,13 @@ jobs:
           echo "next_version=$next_version" >> $GITHUB_ENV
           echo "Version to be created: $next_version"
 
+      - name: Debug Token Permissions
+        run: |
+          echo "Checking token permissions"
+          gh auth status
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -46,46 +53,16 @@ jobs:
         run: |
           GOOS=linux GOARCH=amd64 go build -o quacker-linux-amd64
           GOOS=linux GOARCH=arm64 go build -o quacker-linux-arm64
-          GOOS=darwin GOARCH=amd64 go build -o quacker-darwin-amd64
-          GOOS=darwin GOARCH=arm64 go build -o quacker-darwin-arm64
-          GOOS=windows GOARCH=amd64 go build -o quacker-windows-amd64.exe
+
 
       - name: Upload Release Assets
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./quacker-linux-amd64
-          asset_name: quacker-linux-amd64
-          asset_content_type: application/octet-stream
+        run: |
+          gh release upload ${{ env.next_version }} ./quacker-linux-amd64 --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Linux ARM64 Binary
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./quacker-linux-arm64
-          asset_name: quacker-linux-arm64
-          asset_content_type: application/octet-stream
-
-      - name: Upload macOS AMD64 Binary
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./quacker-darwin-amd64
-          asset_name: quacker-darwin-amd64
-          asset_content_type: application/octet-stream
-
-      - name: Upload macOS ARM64 Binary
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./quacker-darwin-arm64
-          asset_name: quacker-darwin-arm64
-          asset_content_type: application/octet-stream
-
-      - name: Upload Windows AMD64 Binary
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./quacker-windows-amd64.exe
-          asset_name: quacker-windows-amd64.exe
-          asset_content_type: application/octet-stream
+        run: |
+          gh release upload ${{ env.next_version }} ./quacker-linux-arm64 --clobber
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
