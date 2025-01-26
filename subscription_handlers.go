@@ -26,7 +26,7 @@ func unsubscribe(w http.ResponseWriter, r *http.Request) {
 	email := r.URL.Query().Get("email")
 	domain := r.URL.Query().Get("domain")
 	if email == "" || domain == "" {
-		renderErrorPage(w, "Missing email or domain")
+		renderErrorPage(w, r, "Missing email or domain")
 		return
 	}
 	if rdb.SRem(ctx, "subs:"+domain, email).Val() > 0 {
@@ -51,8 +51,8 @@ func unsubscribe(w http.ResponseWriter, r *http.Request) {
 				</footer>
 			</div>
 		</body>
-		</html>`, renderMenu(), email, domain, domain)))
+		</html>`, renderMenu(r), email, domain, domain)))
 	} else {
-		renderErrorPage(w, "Subscription not found")
+		renderErrorPage(w, r, "Subscription not found")
 	}
 }

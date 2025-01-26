@@ -49,7 +49,7 @@ func serveJS(w http.ResponseWriter, r *http.Request) {
 	</head>
 	<body>
 		<div class="container mt-5">
-		` + renderMenu() + `
+		` + renderMenu(r) + `
 			<div class="card">
 				<div class="card-body">
 					<h2>Copy and Paste This JS to Your Static Site</h2>

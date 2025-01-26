@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-func renderErrorPage(w http.ResponseWriter, message string) {
+func renderErrorPage(w http.ResponseWriter, r *http.Request, message string) {
 	w.Write([]byte(fmt.Sprintf(`<!DOCTYPE html>
 	<html>
 	<head>
@@ -28,5 +28,5 @@ func renderErrorPage(w http.ResponseWriter, message string) {
 			</footer>
 		</div>
 	</body>
-	</html>`, renderMenu(), message)))
+	</html>`, renderMenu(r), message)))
 }
