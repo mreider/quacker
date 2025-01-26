@@ -23,3 +23,42 @@ go.work.sum
 
 # env file
 .env
+quacker
+# Binaries
+quacker
+quacker.exe
+quacker-linux-*
+quacker-darwin-*
+quacker-windows-*
+
+# Logs and runtime files
+*.log
+*.pid
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Dependency directories
+/vendor/
+node_modules/
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+
+# Operating system files
+*.bak
+*.tmp
+
+# Temporary files
+*.out
+*.o
+*.so
+
+# Generated files during builds
+*.test
+*.cov
+.keys
+*.pem
