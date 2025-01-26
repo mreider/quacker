@@ -35,8 +35,22 @@ jobs:
           echo "next_version=$next_version" >> $GITHUB_ENV
           echo "Version to be created: $next_version"
 
+      - name: Check if Release Tag Exists
+        id: check_tag
+        run: |
+          if gh release view ${{ env.next_version }} > /dev/null 2>&1; then
+            echo "release_exists=true" >> $GITHUB_ENV
+          else
+            echo "release_exists=false" >> $GITHUB_ENV
+          fi
+
+      - name: Skip Release if Tag Exists
+        if: env.release_exists == 'true'
+        run: echo "Release with tag ${{ env.next_version }} already exists. Skipping creation."
+
       - name: Create Release
         id: create_release
+        if: env.release_exists == 'false'
         uses: actions/create-release@v1
         with:
           tag_name: ${{ env.next_version }}
@@ -55,6 +69,7 @@ jobs:
           GOOS=windows GOARCH=amd64 go build -o quacker-windows-amd64.exe
 
       - name: Upload Release Assets
+        if: env.release_exists == 'false'
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
@@ -63,6 +78,7 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Upload Linux ARM64 Binary
+        if: env.release_exists == 'false'
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
@@ -71,6 +87,7 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Upload macOS AMD64 Binary
+        if: env.release_exists == 'false'
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
@@ -79,6 +96,7 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Upload macOS ARM64 Binary
+        if: env.release_exists == 'false'
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
@@ -87,6 +105,7 @@ jobs:
           asset_content_type: application/octet-stream
 
       - name: Upload Windows AMD64 Binary
+        if: env.release_exists == 'false'
         uses: actions/upload-release-asset@v1
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
