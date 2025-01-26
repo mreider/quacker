@@ -41,6 +41,8 @@ jobs:
           release_name: ${{ env.next_version }}
           draft: false
           prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build binaries
         run: |
