@@ -46,10 +46,8 @@ func setupRouter() *mux.Router {
 	r.HandleFunc("/login/callback", handleGitHubCallback).Methods("GET")
 
 	// Update site list handlers
-	r.HandleFunc("/sites", siteListPage).Methods("GET")
-
-	// Other routes
-	r.HandleFunc("/addsite", addSite).Methods("POST")
+	r.HandleFunc("/addsite", addSitePage).Methods("GET")
+	r.HandleFunc("/addsite", addSite).Methods("POST") 
 	r.HandleFunc("/js/{domain}", serveJS).Methods("GET")
 	r.HandleFunc("/subscribe", withFloodControl(subscribe)).Methods("POST")
 	r.HandleFunc("/unsubscribe", withFloodControl(unsubscribe)).Methods("GET")
