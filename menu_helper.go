@@ -1,5 +1,3 @@
-// menu_helper.go
-
 package main
 
 import "net/http"
@@ -15,7 +13,10 @@ func renderMenu(r *http.Request) string {
 	menu := `
 	<nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
 		<a class="navbar-brand" href="/">🦆 Quacker</a>
-		<div class="collapse navbar-collapse">
+		<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+		<div class="collapse navbar-collapse" id="navbarNav">
 			<ul class="navbar-nav mr-auto">
 	`
 
@@ -29,13 +30,12 @@ func renderMenu(r *http.Request) string {
 
 	menu += `
 			</ul>
-			<div class="navbar-text ml-auto">
+			<div class="navbar-text ms-auto">
 	`
 
 	if userLoggedIn {
 		menu += `
-				Logged in: ` + loggedInUser + ` |
-				<a href="/logout" class="nav-link d-inline">Logout</a>
+				<a href="/logout" class="nav-link">Logout ` + loggedInUser + `</a>
 			`
 	}
 
