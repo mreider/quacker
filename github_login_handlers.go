@@ -55,19 +55,24 @@ func handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fmt.Println("Received code:", code) // Debug log
+
 	accessToken, err := exchangeGitHubCodeForToken(code)
 	if err != nil {
+		fmt.Println("Token exchange error:", err) // Debug log
 		renderErrorPage(w, r, "GitHub login failed during token exchange.")
 		return
 	}
 
 	username, err := fetchGitHubUsername(accessToken)
 	if err != nil {
+		fmt.Println("Fetch username error:", err) // Debug log
 		renderErrorPage(w, r, "Failed to retrieve GitHub user information.")
 		return
 	}
 
 	if rdb.Get(ctx, "github_user:"+username).Err() != nil {
+		fmt.Println("Access denied for user:", username) // Debug log
 		renderErrorPage(w, r, "Access denied. This Quacker instance is restricted to pre-approved GitHub users.")
 		return
 	}
@@ -91,6 +96,8 @@ func exchangeGitHubCodeForToken(code string) (string, error) {
 	}
 	jsonPayload, _ := json.Marshal(payload)
 
+	fmt.Println("Sending token exchange request with payload:", string(jsonPayload)) // Debug log
+
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
 	if err != nil {
 		return "", err
@@ -99,23 +106,29 @@ func exchangeGitHubCodeForToken(code string) (string, error) {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("network error during token exchange: %w", err)
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to read token exchange response: %w", err)
 	}
+
+	fmt.Println("Token exchange response:", string(body)) // Debug log
 
 	var responseData map[string]interface{}
 	if err := json.Unmarshal(body, &responseData); err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to parse token exchange response: %w", err)
+	}
+
+	if errorMsg, exists := responseData["error"]; exists {
+		return "", fmt.Errorf("GitHub token exchange error: %s", errorMsg)
 	}
 
 	accessToken, ok := responseData["access_token"].(string)
 	if !ok {
-		return "", fmt.Errorf("failed to retrieve access token")
+		return "", fmt.Errorf("access token not found in response")
 	}
 
 	return accessToken, nil
@@ -140,6 +153,8 @@ func fetchGitHubUsername(token string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
+	fmt.Println("Fetch username response:", string(body)) // Debug log
 
 	var responseData map[string]interface{}
 	if err := json.Unmarshal(body, &responseData); err != nil {
