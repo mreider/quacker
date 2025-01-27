@@ -1,5 +1,3 @@
-// github_login_handlers.go
-
 package main
 
 import (
@@ -8,6 +6,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 )
 
 type OAuthConfig struct {
@@ -36,6 +35,7 @@ func getConfig() (*OAuthConfig, error) {
 func handleGitHubLogin(w http.ResponseWriter, r *http.Request) {
 	config, err := getConfig()
 	if err != nil {
+		fmt.Fprintln(os.Stderr, "Error retrieving config:", err)
 		renderErrorPage(w, r, "GitHub OAuth is not configured.")
 		return
 	}
@@ -51,28 +51,29 @@ func handleGitHubLogin(w http.ResponseWriter, r *http.Request) {
 func handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Query().Get("code")
 	if code == "" {
+		fmt.Fprintln(os.Stderr, "GitHub callback missing code parameter")
 		renderErrorPage(w, r, "GitHub login failed. Please try again.")
 		return
 	}
 
-	fmt.Println("Received code:", code) // Debug log
+	fmt.Fprintln(os.Stderr, "Received code:", code) // Debug log
 
 	accessToken, err := exchangeGitHubCodeForToken(code)
 	if err != nil {
-		fmt.Println("Token exchange error:", err) // Debug log
+		fmt.Fprintln(os.Stderr, "Token exchange error:", err) // Debug log
 		renderErrorPage(w, r, "GitHub login failed during token exchange.")
 		return
 	}
 
 	username, err := fetchGitHubUsername(accessToken)
 	if err != nil {
-		fmt.Println("Fetch username error:", err) // Debug log
+		fmt.Fprintln(os.Stderr, "Fetch username error:", err) // Debug log
 		renderErrorPage(w, r, "Failed to retrieve GitHub user information.")
 		return
 	}
 
 	if rdb.Get(ctx, "github_user:"+username).Err() != nil {
-		fmt.Println("Access denied for user:", username) // Debug log
+		fmt.Fprintln(os.Stderr, "Access denied for user:", username) // Debug log
 		renderErrorPage(w, r, "Access denied. This Quacker instance is restricted to pre-approved GitHub users.")
 		return
 	}
@@ -96,7 +97,7 @@ func exchangeGitHubCodeForToken(code string) (string, error) {
 	}
 	jsonPayload, _ := json.Marshal(payload)
 
-	fmt.Println("Sending token exchange request with payload:", string(jsonPayload)) // Debug log
+	fmt.Fprintln(os.Stderr, "Sending token exchange request with payload:", string(jsonPayload)) // Debug log
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonPayload))
 	if err != nil {
@@ -115,7 +116,7 @@ func exchangeGitHubCodeForToken(code string) (string, error) {
 		return "", fmt.Errorf("failed to read token exchange response: %w", err)
 	}
 
-	fmt.Println("Token exchange response:", string(body)) // Debug log
+	fmt.Fprintln(os.Stderr, "Token exchange response:", string(body)) // Debug log
 
 	var responseData map[string]interface{}
 	if err := json.Unmarshal(body, &responseData); err != nil {
@@ -123,6 +124,7 @@ func exchangeGitHubCodeForToken(code string) (string, error) {
 	}
 
 	if errorMsg, exists := responseData["error"]; exists {
+		fmt.Fprintln(os.Stderr, "GitHub token exchange error:", errorMsg) // Debug log
 		return "", fmt.Errorf("GitHub token exchange error: %s", errorMsg)
 	}
 
@@ -154,7 +156,7 @@ func fetchGitHubUsername(token string) (string, error) {
 		return "", err
 	}
 
-	fmt.Println("Fetch username response:", string(body)) // Debug log
+	fmt.Fprintln(os.Stderr, "Fetch username response:", string(body)) // Debug log
 
 	var responseData map[string]interface{}
 	if err := json.Unmarshal(body, &responseData); err != nil {
