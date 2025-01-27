@@ -5,9 +5,9 @@ package main
 import (
 	"fmt"
 	"net/http"
-	"crypto/tls"
 	"os"
 	"time"
+
 	"github.com/gorilla/mux"
 )
 
@@ -26,14 +26,13 @@ func runServer() {
 }
 
 func startServer(r *mux.Router) {
-	fmt.Println("Starting server on port 443")
+	fmt.Println("Starting server on port 8085")
 	server := &http.Server{
-		Addr:      ":443",
-		Handler:   r,
-		TLSConfig: configureTLS(),
+		Addr:    ":8085", // Updated to use HTTP only on port 8085
+		Handler: r,
 	}
 
-	if err := server.ListenAndServeTLS("cert.pem", "key.pem"); err != nil {
+	if err := server.ListenAndServe(); err != nil {
 		fmt.Printf("Server failed: %s\n", err)
 		os.Exit(1)
 	}
@@ -58,11 +57,5 @@ func withFloodControl(handler http.HandlerFunc) http.HandlerFunc {
 		}
 		requestTimestamps[ip] = time.Now()
 		handler(w, r)
-	}
-}
-
-func configureTLS() *tls.Config {
-	return &tls.Config{
-		MinVersion: tls.VersionTLS12,
 	}
 }

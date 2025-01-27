@@ -42,26 +42,98 @@ Redis is used for application data storage.
    ```
    It should return `PONG`.
 
+4. Install nginx
+   ```bash
+   sudo apt install nginx
+   sudo apt install certbot python3-certbot-nginx -y
+   ```
+
+5. Configure nginx
+   ```bash
+   sudo nano /etc/nginx/sites-available/example.com
+   ```
+
+6. Add this to the file
+   ```bash
+  server {
+    listen 80;
+    server_name quacker.eu;
+
+    # Redirect HTTP to HTTPS
+    return 301 https://$host$request_uri;
+   }
+   
+   ```
+
+7. Enable the domain
+   ```bash
+   sudo ln -s /etc/nginx/sites-available/example.com /etc/nginx/sites-enabled/
+   ```
+
+8. Get a certificate
+   ```bash
+   sudo certbot --nginx -d example.com
+   ```
+
+9. Add the quacker process to nginx for HTTPS
+
+
+10. Add the certificate and https info to the NGINX file
+   ```bash
+
+   server {
+      listen 443 ssl;
+      server_name example.com;
+
+      location / {
+         proxy_pass http://127.0.0.1:8085;
+         proxy_set_header Host $host;
+         proxy_set_header X-Real-IP $remote_addr;
+         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+         proxy_set_header X-Forwarded-Proto $scheme;
+      }
+
+      # Optional: Improve performance and logging
+      access_log /var/log/nginx/quacker.access.log;
+      error_log /var/log/nginx/quacker.error.log;
+
+      # Additional settings for large uploads
+      client_max_body_size 50M;
+   }
+   ```
+
+11. Verify the config and restart nginx
+   ```bash
+   sudo nginx -t
+   sudo systemctl reload nginx
+   ```
 ---
 
-## Downloading the Binary
+## Installing Quacker
 
-You can download the Quacker binary directly from the [GitHub Releases page](https://github.com/your-repo-name/releases):
+To add the `Quacker` binary to your system's `PATH` so you can run it from anywhere, follow these steps:
 
-1. Go to the [Releases](https://github.com/your-repo-name/releases) section of the repository.
-2. Download the appropriate binary for your operating system and architecture:
-   - `quacker-linux-amd64` for Linux 64-bit systems
-   - `quacker-linux-arm64` for Linux ARM systems
-   - `quacker-darwin-amd64` for macOS 64-bit systems
-   - `quacker-darwin-arm64` for macOS ARM systems
-   - `quacker-windows-amd64.exe` for Windows 64-bit systems
-3. Place the binary in a directory included in your system's `PATH` or execute it directly.
+---
 
-Make sure the binary has execution permissions:
-```bash
-chmod +x ./quacker-linux-amd64
-```
+### Instructions:
 
+1. **Download the Binary:**
+   - Go to the [Releases](https://github.com/mreider/releases) section.
+   - Download the appropriate binary for your operating system and architecture:
+     - For Linux 64-bit systems: `quacker-linux-amd64`
+     - For Linux ARM systems: `quacker-linux-arm64`
+
+2. **Make the Binary Executable:**
+   After downloading the binary, navigate to its directory and make it executable:
+   ```bash
+   chmod +x ./quacker-linux-amd64
+   ```
+
+3. **Move the Binary to a Directory in Your `PATH`:**
+   The easiest way to make the binary globally accessible is to move it to a directory that's already in your system's `PATH`. A common choice is `/usr/local/bin`:
+   ```bash
+   sudo mv ./quacker-linux-amd64 /usr/local/bin/quacker
+   ```
 ---
 
 ## Running Quacker
@@ -69,7 +141,7 @@ chmod +x ./quacker-linux-amd64
 ### Setup Configuration
 Before running any other commands, set up the Quacker application:
 ```bash
-./quacker --setup
+quacker --setup
 ```
 This command will prompt you to:
 - Enter your Mailgun API key.
@@ -81,28 +153,28 @@ Note: you might have to run via sudo in order to create certificates.
 ### Generate Invitation Codes
 To create an invitation code:
 ```bash
-./quacker --generate
+quacker --generate
 ```
 This generates a code and stores it in Redis with a 48-hour expiration.
 
 ### Start the Quacker Server
 To start the Quacker application:
 ```bash
-./quacker --run
+quacker --run
 ```
 The server will start on port 443 using HTTPS.
 
 Note: you might have to do this to allow 443 binding or run via sudo
 
 ```bash
- sudo setcap 'cap_net_bind_service=+ep' ./quacker
+ sudo setcap 'cap_net_bind_service=+ep' quacker
  ```
 
 
 ### Process Scheduled Jobs
 To run the Quacker background job (e.g., for sending emails):
 ```bash
-./quacker --job
+quacker --job
 ```
 This can be scheduled using `cron`.
 
@@ -171,4 +243,4 @@ Replace `/path/to/quacker` with the path to your Quacker binary.
 
 ---
 
-You are now ready to manage Quacker on your server!
+You are now ready to run Quacker on your server!
