@@ -40,7 +40,11 @@ func setupRouter() *mux.Router {
 
 	// Update the home page to point to the about page
 	r.HandleFunc("/", aboutPage).Methods("GET")
-	
+
+	// Add GitHub OAuth routes
+	r.HandleFunc("/login/github", handleGitHubLogin).Methods("GET")
+	r.HandleFunc("/login/callback", handleGitHubCallback).Methods("GET")
+
 	// Update site list handlers
 	r.HandleFunc("/sites", siteListPage).Methods("GET")
 

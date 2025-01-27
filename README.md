@@ -80,10 +80,22 @@ Redis is used for application data storage.
 
 10. Add the certificate and https info to the NGINX file
    ```bash
+   server {
+      listen 80;
+      server_name quacker.eu;
+
+      # Redirect HTTP to HTTPS
+      return 301 https://$host$request_uri;
+   }
 
    server {
       listen 443 ssl;
-      server_name example.com;
+      server_name quacker.eu;
+
+      ssl_certificate /etc/letsencrypt/live/quacker.eu/fullchain.pem;
+      ssl_certificate_key /etc/letsencrypt/live/quacker.eu/privkey.pem;
+      include /etc/letsencrypt/options-ssl-nginx.conf;
+      ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 
       location / {
          proxy_pass http://127.0.0.1:8085;
@@ -115,7 +127,15 @@ To add the `Quacker` binary to your system's `PATH` so you can run it from anywh
 
 ---
 
-### Instructions:
+### Automated install (also updates)
+
+Run this in your bash shell (Ubuntu only):
+
+```bash
+curl -sL https://github.com/mreider/quacker/install.sh | bash
+```
+
+### Manual Install:
 
 1. **Download the Binary:**
    - Go to the [Releases](https://github.com/mreider/releases) section.
@@ -150,25 +170,18 @@ This command will prompt you to:
 Note: you might have to run via sudo in order to create certificates.
 
 
-### Generate Invitation Codes
-To create an invitation code:
+### Invite your first user (start with you)
+Invite a github user to join
 ```bash
-quacker --generate
+quacker --allow
 ```
-This generates a code and stores it in Redis with a 48-hour expiration.
 
 ### Start the Quacker Server
 To start the Quacker application:
 ```bash
 quacker --run
 ```
-The server will start on port 443 using HTTPS.
-
-Note: you might have to do this to allow 443 binding or run via sudo
-
-```bash
- sudo setcap 'cap_net_bind_service=+ep' quacker
- ```
+The server will start on port 8085 using HTTPS.
 
 
 ### Process Scheduled Jobs
@@ -195,17 +208,15 @@ This can be scheduled using `cron`.
    After=network.target redis.service
 
    [Service]
-   ExecStart=/path/to/quacker --run
+   ExecStart=quacker --run
    Restart=always
    User=www-data
    Group=www-data
    Environment=PATH=/usr/bin:/usr/local/bin
-   WorkingDirectory=/path/to/
 
    [Install]
    WantedBy=multi-user.target
    ```
-   Replace `/path/to/quacker` with the path to your Quacker binary.
 
 ### Enable and Start the Service
 1. Enable the service to start on boot:
