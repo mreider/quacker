@@ -158,16 +158,28 @@ curl -sL https://github.com/mreider/quacker/install.sh | bash
 
 ## Running Quacker
 
+### Create a Github OAuth app
+
+Admins (like you) will need to set up a Github OAuth app to authenticate users. Make sure the homepage is the domain where you are hosting Quacker (example.com) and the authorization callback URL is `https://example.com/login/callback`
+
+
 ### Setup Configuration
 Before running any other commands, set up the Quacker application:
 ```bash
 quacker --setup
 ```
-This command will prompt you to:
-- Enter your Mailgun API key.
-- Enter the hostname for your server (e.g., `example.com`).
 
-Note: you might have to run via sudo in order to create certificates.
+Values look like this:
+
+```
+Use test hostname (localhost)? (y/n): n
+Hostname for Quacker (example.com): example.com
+Mailgun API Key: bba1d728399(etc)
+Mailgun Host (sandbox.mailgun.org): example.com
+GitHub Client ID: Ov2(etc)
+GitHub Client Secret: 4003bca7(etc)
+GitHub Redirect URI (e.g., http://yourdomain.com/login/callback): https://example.com/login/callback
+```
 
 
 ### Invite your first user (start with you)

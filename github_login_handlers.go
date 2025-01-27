@@ -1,4 +1,4 @@
-// github_login_handlers.go
+// oauth_helper.go
 
 package main
 
@@ -10,19 +10,40 @@ import (
 	"net/http"
 )
 
+type Config struct {
+	MailgunAPIKey      string `json:"MailgunAPIKey"`
+	MailgunHost        string `json:"MailgunHost"`
+	Hostname           string `json:"Hostname"`
+	GitHubClientID     string `json:"GitHubClientID"`
+	GitHubClientSecret string `json:"GitHubClientSecret"`
+	GitHubRedirectURI  string `json:"GitHubRedirectURI"`
+}
+
+func getConfig() (*Config, error) {
+	configJSON, err := rdb.Get(ctx, "config").Result()
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve config from Redis: %w", err)
+	}
+
+	var config Config
+	if err := json.Unmarshal([]byte(configJSON), &config); err != nil {
+		return nil, fmt.Errorf("failed to parse config JSON: %w", err)
+	}
+
+	return &config, nil
+}
+
 func handleGitHubLogin(w http.ResponseWriter, r *http.Request) {
-	// Redirect to GitHub OAuth page
-	clientID := rdb.Get(ctx, "config:github_client_id").Val()
-	redirectURI := rdb.Get(ctx, "config:github_redirect_uri").Val()
-	if clientID == "" || redirectURI == "" {
+	config, err := getConfig()
+	if err != nil {
 		renderErrorPage(w, r, "GitHub OAuth is not configured.")
 		return
 	}
 
 	oauthURL := fmt.Sprintf(
 		"https://github.com/login/oauth/authorize?client_id=%s&redirect_uri=%s&scope=read:user",
-		clientID,
-		redirectURI,
+		config.GitHubClientID,
+		config.GitHubRedirectURI,
 	)
 	http.Redirect(w, r, oauthURL, http.StatusFound)
 }
@@ -34,43 +55,39 @@ func handleGitHubCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Exchange code for access token
 	accessToken, err := exchangeGitHubCodeForToken(code)
 	if err != nil {
 		renderErrorPage(w, r, "GitHub login failed during token exchange.")
 		return
 	}
 
-	// Fetch user info from GitHub API
 	username, err := fetchGitHubUsername(accessToken)
 	if err != nil {
 		renderErrorPage(w, r, "Failed to retrieve GitHub user information.")
 		return
 	}
 
-	// Check if the user is allowed in Redis
 	if rdb.Get(ctx, "github_user:"+username).Err() != nil {
 		renderErrorPage(w, r, "Access denied. This Quacker instance is restricted to pre-approved GitHub users.")
 		return
 	}
 
-	// Successful login, store user in session or indicate login success
 	setSession(w, username)
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
 func exchangeGitHubCodeForToken(code string) (string, error) {
-	clientID := rdb.Get(ctx, "config:github_client_id").Val()
-	clientSecret := rdb.Get(ctx, "config:github_client_secret").Val()
-	if clientID == "" || clientSecret == "" {
+	config, err := getConfig()
+	if err != nil {
 		return "", fmt.Errorf("GitHub OAuth credentials are not configured")
 	}
 
 	url := "https://github.com/login/oauth/access_token"
 	payload := map[string]string{
-		"client_id":     clientID,
-		"client_secret": clientSecret,
+		"client_id":     config.GitHubClientID,
+		"client_secret": config.GitHubClientSecret,
 		"code":          code,
+		"redirect_uri":  config.GitHubRedirectURI,
 	}
 	jsonPayload, _ := json.Marshal(payload)
 
@@ -98,7 +115,7 @@ func exchangeGitHubCodeForToken(code string) (string, error) {
 
 	accessToken, ok := responseData["access_token"].(string)
 	if !ok {
-		return "", fmt.Errorf("Failed to retrieve access token")
+		return "", fmt.Errorf("failed to retrieve access token")
 	}
 
 	return accessToken, nil
@@ -131,14 +148,13 @@ func fetchGitHubUsername(token string) (string, error) {
 
 	username, ok := responseData["login"].(string)
 	if !ok {
-		return "", fmt.Errorf("Failed to retrieve GitHub username")
+		return "", fmt.Errorf("failed to retrieve GitHub username")
 	}
 
 	return username, nil
 }
 
 func setSession(w http.ResponseWriter, username string) {
-	// Implement session handling logic
 	http.SetCookie(w, &http.Cookie{
 		Name:  "quacker_user",
 		Value: username,
