@@ -1,4 +1,4 @@
-// oauth_helper.go
+// github_login_handlers.go
 
 package main
 
@@ -10,7 +10,7 @@ import (
 	"net/http"
 )
 
-type Config struct {
+type OAuthConfig struct {
 	MailgunAPIKey      string `json:"MailgunAPIKey"`
 	MailgunHost        string `json:"MailgunHost"`
 	Hostname           string `json:"Hostname"`
@@ -19,13 +19,13 @@ type Config struct {
 	GitHubRedirectURI  string `json:"GitHubRedirectURI"`
 }
 
-func getConfig() (*Config, error) {
+func getConfig() (*OAuthConfig, error) {
 	configJSON, err := rdb.Get(ctx, "config").Result()
 	if err != nil {
 		return nil, fmt.Errorf("failed to retrieve config from Redis: %w", err)
 	}
 
-	var config Config
+	var config OAuthConfig
 	if err := json.Unmarshal([]byte(configJSON), &config); err != nil {
 		return nil, fmt.Errorf("failed to parse config JSON: %w", err)
 	}
