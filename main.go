@@ -1,5 +1,3 @@
-// main.go
-
 package main
 
 import (
@@ -31,12 +29,22 @@ func main() {
 		switch os.Args[1] {
 		case "--setup":
 			setup()
-		case "--generate":
-			generateInvite()
 		case "--run":
 			runServer()
 		case "--job":
 			job()
+		case "--allow":
+			if len(os.Args) < 3 {
+				fmt.Println("Usage: quacker --allow <GitHubUsername>")
+				os.Exit(1)
+			}
+			allowGitHubUser(os.Args[2])
+		case "--remove":
+			if len(os.Args) < 3 {
+				fmt.Println("Usage: quacker --remove <GitHubUsername>")
+				os.Exit(1)
+			}
+			removeGitHubUser(os.Args[2])
 		default:
 			fmt.Println("Invalid argument")
 		}
